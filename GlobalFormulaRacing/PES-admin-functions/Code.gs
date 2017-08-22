@@ -1,5 +1,4 @@
-// Runs whenever the PES spreadhseet is opened
-// Appends menu item(s) to the toolbar
+// Runs whenever the PES spreadhseet is opened, appends menu item(s) to the toolbar
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('Admin Tools')
@@ -184,45 +183,6 @@ function GetMissingPartData(sheetNames, requiredColumns) {
   }
   
   return allUsersData;
-}
-
-
-
-
-// Make array of missing part data, sorted by user email
-// NOT CURRENTLY USED
-function SortMissingData() {
-  var newArray = [];
-  var missingData = GetMissingPartData(['Chassis', 'Aero'], ['Cost ($)']);
-  
-  // For each sheet in missingData
-  for (var i=0; i < missingData.length; i++) {
-    
-    var previousUser = '';
-    var previousUserIndex = 0;
-    // For each part (row) in missingData
-    for (var j=0; j < missingData[i].length; j++) {
-      
-      var user = missingData[i][j]['user'];
-      Logger.log('User: %s', user);
-      
-      if (user == previousUser) { // if this part is from same user as previous part, add this data object to the user
-        newArray[previousUserIndex]['data']
-        .push(missingData[i][j]);
-      }
-      else { // if this is a new user, add this user to the new array
-        newArray.push({
-          user: user,
-          data: [missingData[i][j]]
-        });
-      }
-      
-      previousUser = user;
-      previousUserIndex = newArray.length - 1;
-    }
-  }
-  
-  Logger.log(JSON.stringify(newArray));
 }
 
 
