@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <base target="_top">
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script> <!--This loads the jQuery Library-->
+      <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+  </head>
+  
+  <body>
+    <div id="load"><h1>Loading...</h1></div>
+    <div id="success" style="color:green; display:none;"><b>Success! Emails sent.</b></div>
+    <div id="failed" style="color:red; display:none;"><b>Failed! Not all emails sent.</b></div>
+    <div id="error"></div>
+    
+    <div id="content" style="display: none;">
+        <div style="color:red;">GFR PES Admins <b>ONLY</b>!<br></div>
+        <br>
+        
+        <b>Select sheets for emails</b><br>
+        <input type="checkbox" onClick="toggleCheckboxes(this, 'sheet')">Select all<br><br>
+        <form id="sheetCheckboxes">
+        </form>
+        <hr>
+        
+        <b>Select required columns</b><br>
+        <input type="checkbox" onClick="toggleCheckboxes(this, 'column')">Select all<br><br>
+        <form id="columnsCheckboxes">
+        </form>
+        <hr>
+        
+        <br><b>Email body (to recipient)</b><br>
+        <br>"Hello 	&lt;recipient&gt;,
+        <br><textarea id="emailBody" cols="80" rows="8">
+        Some of your parts in the PES are missing data. 
+        Your parts need to be completely filled out by 12/3/16.
+        
+        Please see the table below for specifics:
+        </textarea><br>
+        Thank you,<br>
+        PES Admins"<br>   
+        <br><hr>
+        
+        <div id="warning" style="color:red; margin: 8px 0 0 0; visibility: hidden;">
+          placeholder warning
+        </div>   
+        <div id="confirmText" style="color:red; float:right; margin: 8px 0 0 0; visibility: hidden;">
+          placeholder confirm
+        </div>
+        
+        <br><button class="action" id="buttonGetData" onclick="StoreMissingPartData()" disabled=true>Generate Emails</button>
+        <br><button class="create" id="buttonSendEmails" onclick="SendEmails()" style="float:right; margin: 32px;" disabled="true">Send emails</button>
+        
+        <br><b>Select email data to preview</b><br>
+        <select id="dropdownPreviewData" style="width: 50%;" disabled=true>
+        </select><br>
+        
+        <br><b>Data preview</b>
+        <div id="dataPreview" style="width: 95%;  padding: 8px; border: 1px solid black; height: auto">
+        </div>
+    
+    </div>
+  </body>
+</html>
+
+<script>
+
+// BEGIN document.ready() function (auto-runs when page loads)
+$(document).ready(function() {
+    
+    
+    // Create checkboxes for each sheet's name
+    // Call "GetSheetNames()" from Code.gs, then create a checkbox item for each name in array 'sheetNames'
+    ShowLoading('sheetCheckboxes');
+    google.script.run
+        .withSuccessHandler(function(sheetNames) {
+          var checkboxHTML = '';
+          for (var i=0; i < sheetNames.length; i++) {
+            var sheetName = sheetNames[i];
+            checkboxHTML += '<input type="checkbox" name="sheet" value="'+sheetName+'">'+sheetName+'<br>';
+          }
+            $('#sheetCheckboxes').html(checkboxHTML);
+        })
+        .GetSheetNames();
+    
+    
+    
+    
+    // Create checkboxes for each sheet column name
+    // Call "GetColumns('sheetName')" from Code.gs, then create a checkbox item for each name in array 'requiredColumns'
+    ShowLoading('columnsCheckboxes');
+    google.script.run
+        .withSuccessHandler(
+        function (requiredColumns) {
+            var checkboxHTML = '';
+            for (var i=0; i < requiredColumns.length; i++) {
+              var column = requiredColumns[i];
+              checkboxHTML += '<input type="checkbox" name="column" value="'+column+'">'+column+'<br>';
+            }
+            $('#columnsCheckboxes').html(checkboxHTML);
+            $('#load').hide();
+            $('#content').show();
+        })
+        .GetColumns('cPowertrain');
+        
+        
+        
+        
+    // Enable 'Get Data' button when user changes checkbox selections
+    $('#sheetCheckboxes, #columnsCheckboxes, input[type=checkbox]').change(function(){
+        $('#buttonGetData').prop("disabled", false);
+    });
+    
+    
+});
+// END document.ready() function (auto-runs when page loads)
+
+
+
+
+// When dropdown option is selected, show that option's data in the '#dataPreview' div
+$('#dropdownPreviewData').change(function() {
+    $('#tablePreview').html('Loading...');  // Show loading for preview area
+    $('#buttonSendEmails').prop("disabled", false);
+    
+    var option =$(this).val();
+    var index = $(this).prop('selectedIndex');
+    
+    var allUserData = JSON.parse(localStorage.getItem('allUserData'));
+    
+    var emailBody = allUserData[index]['emailBody'];
+    console.log(JSON.stringify(emailBody));
+    $('#dataPreview').html(emailBody);
+});
+
+
+
+
+// 'Select All' button for checkboxes
+function toggleCheckboxes(source, name) {
+  var checkboxes = document.getElementsByName(name);
+  for (var i=0; i < checkboxes.length; i++)
+    checkboxes[i].checked = source.checked;
+}
+
+
+
+
+// Store an array of missing part data (user, sheet name, column names of missing data, etc.) using localStorage.setItem()
+function StoreMissingPartData() {
+    $('#dropdownPreviewData').prop("disabled", true);  // Disable the checkbox while script loads
+    $('#buttonGetData').prop("disabled", true);  // Disable button
+    
+    // Get sheet names from seleted checkboxes
+    var selectedSheets = [];
+    $('#sheetCheckboxes input:checked').each(function() {
+        selectedSheets.push($(this).attr('value'));
+    });
+    
+    // Get required column names from selected checkboxes
+    var selectedColumns = [];
+    $('#columnsCheckboxes input:checked').each(function() {
+        selectedColumns.push($(this).attr('value'));
+    });
+    
+    // If user selected at least 1 sheet name and at least 1 required column
+    // Get html tables for each sheet, from the missing required column data in each sheet row
+    if (selectedSheets.length > 0) {
+        if (selectedColumns.length > 0) {
+            $('#dropdownPreviewData').html('<option>Loading...</option>');
+            HideWarning();
+            google.script.run
+                .withSuccessHandler(
+                  function (allUserData) {
+                      localStorage.setItem('allUserData', JSON.stringify(allUserData));  // Stores the array of user data in the HTML page
+                      AddHTMLTablesToPartData();
+                })
+                .GetMissingPartData(selectedSheets, selectedColumns);
+            
+        } else ShowWarning('Select at least one required column');
+    } else ShowWarning('Select at least one sheet');
+}
+
+
+
+
+// Append HTML-formatted tables to the missing part data objects, which were stored locally by "StoreMissingPartData()"
+function AddHTMLTablesToPartData() {
+    var allUserData = JSON.parse(localStorage.getItem('allUserData'));
+    
+    // The returned allUserData array has an additional 'table' object in each user array. 
+    google.script.run
+        .withSuccessHandler(function(allUserData) {
+            localStorage.setItem('allUserData', JSON.stringify(allUserData));
+            AddEmailBodiesToPartData();
+        })
+        .MakeHTMLTables(allUserData);
+}
+
+
+
+
+// Append HTML-formatted email bodies to the missing part data objects, which were stored locally by "AddHTMLTablesToPartData()"
+// also populates dropdown for email previewing
+function AddEmailBodiesToPartData() {
+    var body = '';
+    var allUserData = JSON.parse(localStorage.getItem('allUserData'));
+    var emailBody = $('#emailBody').val();
+    emailBody = emailBody.replace(/(?:\r\n|\r|\n)/g, '<br />');
+
+    
+    google.script.run
+        .withSuccessHandler(function(allUserData) {
+            localStorage.setItem('allUserData', JSON.stringify(allUserData));
+            
+            var dropdownList = [];
+            var dropdownIndexes = [];
+                      
+            for (var i=0; i < allUserData.length; i++) // for each sheet
+                dropdownList.push(allUserData[i]['user']);
+                          
+            PopulateDropdown(dropdownList, 'dropdownPreviewData');
+        })
+        .MakeEmails(allUserData, emailBody);
+}
+
+
+
+
+// Retreive missing part data from local storage, then send emails to users using "SendEmails()" found in Code.gs
+function SendEmails() {
+    var allUserData = JSON.parse(localStorage.getItem('allUserData'));
+    
+    if (confirm('This will send '+allUserData.length+' emails\n\nClick "OK" to send these emails')) {
+      if (allUserData.length >= 100) {
+          alert('There are more than the maximum daily quota of 100 emails. Unable to send.');
+      }
+        google.script.run
+            .withSuccessHandler(function(allUserData) {
+                $('#content').hide();
+                $('#success').show();
+            })
+            .withFailureHandler(function(error) {
+                $('#content').hide();
+                $('#failed').show();
+                $('#error').html('Error: '+error.name+'<br />'+error.message+'<br />'+error.stack);
+            })
+            .SendEmails(allUserData);
+    } else {
+        return false;
+    }
+       
+}
+
+
+
+// Helper functions
+
+function PopulateDropdown(array, elementID) {
+    $('#'+elementID).prop("disabled", false);
+    var HTML = '';
+    for (var i=0; i < array.length; i++) {
+        var value = array[i];
+        HTML += '<option value="'+value+'">'+value+'</option>';
+    }
+    $('#'+elementID).html(HTML);
+}
+
+function ShowConfirm(message) {
+    $('#confirmText').css('visibility', 'visible')
+    $('#confirmText').html(message+'<br>')
+}
+
+function ShowLoading(element) {
+    $('#'+element).html('Loading...')
+}
+
+function ShowWarning(message) {
+    $('#warning').css('visibility', 'visible')
+    $('#warning').html(message+'<br>')
+}
+
+function HideWarning() {
+    $('#warning').css('visibility', 'hidden')
+}
+
+function PreviewEmails(source) {
+    $('#tablePreview').html()
+}
+
+</script>
