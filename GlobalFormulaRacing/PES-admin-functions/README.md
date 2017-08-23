@@ -9,7 +9,7 @@ The Part Evaulation Sheet (PES) lists info about every part in the car (qty, wei
 This tool was made to help notify each part creator of any missing information deemed necessary by a PES admin, in order to maximize the completion of info on each part and eliminate tedious workload(s).
 
 ## The code: how it works
-Upon loading the dialog box from the toolbar on a Google Sheet (the PES), an admin would first select the subteams (ie. sheet names) and required fields (ie. column names); this forms the criteria to filter out missing part data. 
+Upon loading the dialog box from the toolbar on a Google Sheet (the PES), an admin would first select the subteams (ie. sheet names) and required fields (ie. column names); this forms the criteria to filter missing part data. 
 
 To aggregate the list of missing data, the sheet/column criteria is passed to `GetMissingPartData()` in Code.gs. This function checks for any blank cells with a column header matching one of the required fields (blank rows and filled cells are ignored), and creates an object for each part. for example:  
 ```
