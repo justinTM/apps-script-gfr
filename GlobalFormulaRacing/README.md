@@ -6,9 +6,11 @@ A collection of tools and coding projects I wrote to help members of the Global 
 - ![received-sponsor-parts-form][received-sponsor-parts-form] -   Web app to record incoming donated items, sort pictures in Google Drive, and notify Marketing subteams of the arrival
 
 ## "Disclaimer"
-Currently, none of these are being actively improved, aside from critical fixes as requested by the team. I started coding in Google Apps Script long before learning web dev best practices. This code - apart from being changed by teammates later down the road - was never intended to be public ... simply "get the job done quick" Please don't assume this code is *anywhere* close to perfect :)
+Currently, none of these are being actively improved, aside from critical fixes as requested by the team. I started coding in Google Apps Script long before learning web dev best practices. This code - apart from being changed by teammates later down the road - was never intended to be public ... simply "get the job done quick".
 
-That all being said, comments/questions/suggestions for any of the code you see here would be much appreciated!
+Please don't assume this code is *anywhere* close to perfect.
+
+That all being said, comments/questions/suggestions for any of the code you see here would be much appreciated! :)
 
 [PES-admin-functions]: https://github.com/justinTM/apps-script-projects/tree/master/GlobalFormulaRacing/PES-admin-functions
 [inventory-tracking]: https://github.com/justinTM/apps-script-projects/tree/master/GlobalFormulaRacing/inventory-tracking
