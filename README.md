@@ -15,10 +15,10 @@ Please don't assume this code is *anywhere* close to perfect.
 
 That all being said, comments/questions/suggestions for any of the code you see here would be much appreciated! :)
 
-[project1]: https://github.com/justinTM/apps-script-projects/tree/master/GlobalFormulaRacing/PES-admin-functions
-[project2]: https://github.com/justinTM/apps-script-projects/tree/master/GlobalFormulaRacing/inventory-tracking
-[project3]: https://github.com/justinTM/apps-script-projects/tree/master/GlobalFormulaRacing/received-sponsor-parts-form
+[project1]: https://github.com/justinTM/apps-script-projects/tree/master/PES-admin-functions
+[project2]: https://github.com/justinTM/apps-script-projects/tree/master/inventory-tracking
+[project3]: https://github.com/justinTM/apps-script-projects/tree/master/received-sponsor-parts-form
 
-[screenshot1]: /GlobalFormulaRacing/PES-admin-functions/screenshot.PNG
-[screenshot2]: /GlobalFormulaRacing/inventory-tracking/screenshot.PNG
-[screenshot3]: /GlobalFormulaRacing/received-sponsor-parts-form/screenshot.PNG
+[screenshot1]: /PES-admin-functions/screenshot.PNG
+[screenshot2]: /inventory-tracking/screenshot.PNG
+[screenshot3]: /received-sponsor-parts-form/screenshot.PNG
