@@ -168,6 +168,7 @@ function showDialogBulkBarcodeCreation() {
 }
 
 
+// Shows the dialog box for the changelog for this app. Very outdated.
 function showChangelog() {
   var title = 'Changes and To-Do List'; 
   var templateName = 'changelog'; 
@@ -179,11 +180,11 @@ function showChangelog() {
 
 
 
-// Creates a modal dialog box
-function createDialog(title,templateName,width) { 
+// This function creates a modal (moveable) dialog box, given various parameters. 
+function createDialog(title, templateName, width) { 
   var ui = SpreadsheetApp.getUi();
-  var createUi = HtmlService.createTemplateFromFile(templateName).evaluate().getContent();
-  var html = HtmlService.createTemplate(createUi)
+  var templateContent = HtmlService.createTemplateFromFile(templateName).evaluate().getContent();
+  var html = HtmlService.createTemplate(templateContent)
     .evaluate()
     .setSandboxMode(HtmlService.SandboxMode.IFRAME)
     .setWidth(width);
@@ -195,7 +196,8 @@ function createDialog(title,templateName,width) {
 
 
 
-// Creates a modal dialog box, and appends just part data at the end of the html file
+// Creates a modal dialog box, and appends only the part data (using "getInvData()")
+// inside a <script> tag at the end of the html file
 function createDialogWithPartData(title,templateName,width) { 
   var ui = SpreadsheetApp.getUi();
   var createUi = HtmlService.createTemplateFromFile(templateName).evaluate().getContent();
@@ -232,18 +234,22 @@ function createDialogWithAllData(title,templateName,width) {
 
 
 
-
+// Returns an array of column header strings, given any sheet's range
 function getHeaders(sheet,range,columnHeadersRowIndex) {
   var numColumns = range.getEndColumn() - range.getColumn() + 1;
+  
+  // The 1D range of sheet headers (column titles) for a given range
   var headersRange = sheet.getRange(columnHeadersRowIndex, firstBarcodeColumn, 1, numColumns);
-  var headers = headersRange.getValues()[0];
 
-  return headers;
+  return headersRange.getValues()[0];
 }
 
 
 
-
+// For a column of merged rows representing the category of the item (eg. "Cylinder Head" spanning 4 rows),
+    // this function duplicates the merged value for each row within the category
+// For example, if 4 rows were marged, with the cell contents "Cyldiner Head", the cells would be un-merged
+    // and the value "Cylinder Head" would be copied to each individual cell
 function fillBlanks() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('Master Inventory');
@@ -256,14 +262,19 @@ function fillBlanks() {
   var rangeBegin = "A1"+firstBarcodeRow;
   var rangeEnd = "A1"+firstBarcodeRow;
   
+  // Un-merge any merged cells
   range.breakApart();
   
+  // Loop through each row, copying the merged valued for all cells in each now-unmerged range
   for (var row in data) {
     var value = data[row][0];
     var cellNumber = +row + +firstBarcodeRow;
     
+    // Continually update the merged range's end, in order to update each cell in bulk whenever we reach the end of the merged cells
     if (value == lastValue || value == "") 
       rangeEnd = "A" + cellNumber;
+    
+    // If we encounter a NEW merged cell range, go ahead and apply the merged value to all cells of the previous range.
     else if (value != lastValue && value != ""){
       if (rangeBegin != rangeEnd) {
         var tempRange = sheet.getRange(rangeBegin+':'+rangeEnd)
