@@ -246,49 +246,148 @@ function getHeaders(sheet,range,columnHeadersRowIndex) {
 
 
 
-// For a column of merged rows representing the category of the item (eg. "Cylinder Head" spanning 4 rows),
-    // this function duplicates the merged value for each row within the category
-// For example, if 4 rows were marged, with the cell contents "Cyldiner Head", the cells would be un-merged
-    // and the value "Cylinder Head" would be copied to each individual cell
-function fillBlanks() {
+function synchronousSort(sheetToSort, columnToSort) {
+  sheetToSort.sort(columnToSort);
+  return true;
+}
+
+
+
+// This function breaks apart merged cells in column A (part categories), sorts column A,
+  //re-merges cells with matching values, then applies a border between each group of merged cells
+function unmergeThenSortByCategoryAndFixBorders() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Master Inventory');
+  var range = sheet.getRange(firstBarcodeRow, 1, sheet.getLastRow());
+  
+  unmergeAndDuplicateValues();
+  var result = synchronousSort(sheet, 1);
+  
+  if (result) {
+    applyBottomBorderToGoupedValues();
+    mergeCellsContainingDuplicatesValues();
+  }
+}
+
+
+
+
+// This function breaks apart any merged cells in column A (part categories), 
+  // then copies the merged-cell-value to each respective individual cell
+function unmergeAndDuplicateValues() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Master Inventory');
+  var range = sheet.getRange(firstBarcodeRow, 1, sheet.getLastRow());
+  range.breakApart();
+  
+  var columnToSearchZeroIndexed = 0;
+  var rowRangesArray = getRowRangesOfGroupedValues(columnToSearchZeroIndexed);
+  var numGroups = rowRangesArray.length;
+  
+  for (var i=0; i < numGroups; i++) {
+    var firstTempRow = rowRangesArray[i][0];
+    var lastTempRow = rowRangesArray[i][1];
+    var valueToDuplicate = rowRangesArray[i][2]
+    
+    var tempRange = sheet.getRange("A"+firstTempRow+':'+"A"+lastTempRow);
+    tempRange.setValue(valueToDuplicate);
+  }
+
+}
+
+
+
+// This function places a border between different groups of values in column A (part categories)
+function applyBottomBorderToGoupedValues() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Master Inventory');
+  var numColumns = sheet.getLastColumn();
+    
+  var columnToSearchZeroIndexed = 0;
+  var rowRangesArray = getRowRangesOfGroupedValues(columnToSearchZeroIndexed);
+  var numGroups = rowRangesArray.length;
+  
+  for (var i=0; i < numGroups; i++) {
+    var firstTempRow = rowRangesArray[i][0];
+    var lastTempRow = rowRangesArray[i][1];
+    var numTempRows = lastTempRow - firstTempRow;
+    
+    var tempRange = sheet.getRange(firstTempRow, columnToSearchZeroIndexed+1, numTempRows+1, numColumns);
+    tempRange.setBorder(false, false, true, false, false, false);
+  }
+}
+
+
+
+// This function finds cells in column A (part category) with matching values and merges them
+function mergeCellsContainingDuplicatesValues() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('Master Inventory');
   
-  var range = sheet.getRange(firstBarcodeRow,1,sheet.getLastRow(),1);
-  var data = range.getValues();
+  var columnToSearchZeroIndexed = 0;
+  var rowRangesArray = getRowRangesOfGroupedValues(columnToSearchZeroIndexed);
+  var numGroups = rowRangesArray.length;
   
+  for (var i=0; i < numGroups; i++) {
+    var firstTempRow = rowRangesArray[i][0];
+    var lastTempRow = rowRangesArray[i][1];
+    
+    var tempRange = sheet.getRange("A"+firstTempRow+':'+"A"+lastTempRow);
+    tempRange.mergeVertically();
+  }
+}
+
+
+
+
+// This function gathers duplicate-valued cells in column A (part category column)
+  // then returns a 2D array of row number ranges (eg. [[1,7], [8,13]]) for these groups
+// If rows 4 through 8 had the value "Alternator", then the returned array would contain "[4,8]"
+function getRowRangesOfGroupedValues(columnNumberZeroIndexed) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Master Inventory');
+  var range = sheet.getRange(firstBarcodeRow,columnNumberZeroIndexed+1,sheet.getLastRow(),1);
+  var data = range.getValues(); // [][]
+    
+  var rowRangesArray = [];
+  
+  // Track both the previous cell's value (lastValue) and the most recent marged-cell text (lastText)
   var lastValue = "";
   var lastText = "";
-  var rangeBegin = "A1"+firstBarcodeRow;
-  var rangeEnd = "A1"+firstBarcodeRow;
-  
-  // Un-merge any merged cells
-  range.breakApart();
-  
+  var rowBegin = firstBarcodeRow+1;
+  var rowEnd = firstBarcodeRow+1;
+    
   // Loop through each row, copying the merged valued for all cells in each now-unmerged range
   for (var row in data) {
-    var value = data[row][0];
+    var value = data[row][columnNumberZeroIndexed];
     var cellNumber = +row + +firstBarcodeRow;
     
     // Continually update the merged range's end, in order to update each cell in bulk whenever we reach the end of the merged cells
-    if (value == lastValue || value == "") 
-      rangeEnd = "A" + cellNumber;
+    if (value == lastValue || value == "") {
+      rowEnd = cellNumber;
+    }
     
     // If we encounter a NEW merged cell range, go ahead and apply the merged value to all cells of the previous range.
+      // Skips the very first iteration (row = 0) by ignoring if the default value = ""
     else if (value != lastValue && value != ""){
-      if (rangeBegin != rangeEnd) {
-        var tempRange = sheet.getRange(rangeBegin+':'+rangeEnd)
-        tempRange.setValue(lastText)
-      }
-      rangeBegin = "A" + cellNumber;
-      rangeEnd = "A" + cellNumber;
+      // Store this range of rows, plus the cell value, into an array. Append this array to rowRangesArray
+      var tempRowsArray = [rowBegin, rowEnd, lastText];
+      rowRangesArray.push(tempRowsArray);
+      
+      // Reset the range, for the next iteration of merged cell values
+      rowBegin = cellNumber;
+      rowEnd = cellNumber;
     }
+    
     if (value != "")
       lastText = value;
+    
     lastValue = value;
   }
-
-} 
+  
+  Logger.log(JSON.stringify(rowRangesArray));
+  return rowRangesArray;
+}
 
 
 
