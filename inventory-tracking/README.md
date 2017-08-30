@@ -21,11 +21,11 @@ Coming soon&trade;
 Upon opening the Google Sheet, the toolbar is updated to show the custom "Add/Remove Parts" menu
   1. A user would first open the dialog through the toolbar
   2. Scan/enter a location code (barcode stickers are affixed to each location)
-  3. Scan/enter a part barcode.
+  3. Scan/enter a part barcode.  
     a. a subtotal list of parts is created automatically in the dialog
   4. (optional) Adjust quantity (using increment buttons, or by typing a number)
   5. (optional) Remove items from the subtotal list using the red "X" button on each row
-  6. Verify subtotal list, then click "Submit" button at the bottom
+  6. Verify subtotal list, then click "Submit" button at the bottom  
     a. Parts are automatically added/removed from the spreadsheet
 
 ## Attribution(s)
