@@ -29,7 +29,7 @@ Upon opening the Google Sheet, the toolbar is updated to show the custom "Add/Re
     a. Parts are automatically added/removed from the spreadsheet
 
 ## Attribution(s)
-My first introduction to Google Apps Script came after watching **Lenny Cunningham**'s ![Barcode Scanning with Chromebooks and Apps Script video on Youtube][lenny-link]. I owe a HUGE thank you to him and his work. Many nights were spent on Hangouts, holding my hand as I struggled through getting his project working on my own Sheet.
+My first introduction to Google Apps Script came after watching **Lenny Cunningham**'s [Barcode Scanning with Chromebooks and Apps Script video on Youtube][lenny-link]. I owe a HUGE thank you to him and his work. Many nights were spent on Hangouts, holding my hand as I struggled through getting his project working on my own Sheet.
 
 [screenshot]: screenshot.PNG
 [lenny-link]: https://youtu.be/UON8jjI1GDc
