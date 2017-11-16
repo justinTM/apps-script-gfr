@@ -11,7 +11,9 @@ This tool was made to help notify each part creator of any missing information d
 ## The code: how it works
 Upon loading the dialog box from the toolbar on a Google Sheet (the PES), an admin would first select the subteams (ie. sheet names) and required fields (ie. column names); this forms the criteria to filter missing part data. 
 
-To aggregate the list of missing data, the sheet/column criteria is passed to `GetMissingPartData()` in Code.gs. This function checks for any blank cells with a column header matching one of the required fields (blank rows and filled cells are ignored), and creates an object for each part. for example:  
+To aggregate the list of missing data, the sheet/column criteria is passed to `GetMissingPartData()` in Code.gs. This function checks for any blank cells with a column header matching one of the required fields (blank rows and filled cells are ignored), and creates an object for each part.  
+
+Example part object:
 ```
  {
             "sheetName": "Subteam Name",
@@ -25,7 +27,9 @@ To aggregate the list of missing data, the sheet/column criteria is passed to `G
 }
 ```
 
-After looping through each row and making an array of part objects within each user, `GetMissingPartData()` returns an array of objects, for example: 
+After looping through each row and making an array of part objects within each user, `GetMissingPartData()` returns an array of user data.  
+
+Example array of user objects:
 ```
 [
   {
