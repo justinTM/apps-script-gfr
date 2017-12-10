@@ -9,7 +9,7 @@ In GFR (Global Formula Racing, the student club at my university), we have a ver
   - Reduce time wasted looking for parts
   - Save time/money spent buying (lost) parts we already purchased
   - Make engine rebuilds (a stressful task) easier and quicker
-  - Redorder parts when empty
+  - Reorder parts when empty
   - Allow new members to contribute with less confusion
   
 This tool allows users to quickly add items to the inventory using a USB barcode scanner (for example, when a shipment of parts comes in, each one packaged in a barcoded plastic Honda bag), remove them using the same process, and lookup part info (without the dialog).
